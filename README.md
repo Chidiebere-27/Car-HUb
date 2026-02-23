@@ -1,7 +1,7 @@
 # Car-HUb
-****Workshop Management Database (PostgreSQL)****
-
+******Workshop Management Database (PostgreSQL)******
 **Overview**
+
 A PostgreSQL relational database built for a multi-branch car workshop to manage customers, vehicles, bookings, services, payments, parts inventory, staff scheduling, safety inspections, and feedback.
 
 What I Built
@@ -16,8 +16,7 @@ Example queries for refunds, unresolved feedback, staff schedules, and stock mon
 
 **Role-based access control (RBAC)** with custom roles and granular GRANT permissions (least privilege)
 
-****Database Entities**
-**
+****Database Entities****
 **Main tables include:**
 
 Branch, Workshop, Shift, Staff, Role, Staff_role
