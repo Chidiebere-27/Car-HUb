@@ -1,0 +1,790 @@
+CREATE TABLE Branch (
+    Branch_id SERIAL PRIMARY KEY,
+    branch_location VARCHAR (50) NOT NULL,
+    Postcode VARCHAR (10) NOT NULL,
+    Facilities VARCHAR (250),
+    Capacity INT NOT NULL
+);
+
+CREATE INDEX postcode ON Branch (Postcode);
+
+CREATE TABLE Payment ( 
+    Payment_id SERIAL PRIMARY KEY, 
+    Payment_date DATE NOT NULL, 
+    Payment_type VARCHAR (20), 
+    Amount_due DECIMAL (10, 2), 
+    Instalment_status BOOLEAN NOT NULL, 
+    Instalment_note VARCHAR (500),
+    Refund DECIMAL (10,2)
+);
+
+CREATE INDEX date ON Payment (Payment_date);
+CREATE INDEX amount_due ON Payment (Amount_due);
+CREATE INDEX payment_status ON Payment (Instalment_status);
+CREATE INDEX refund ON Payment (Refund);
+
+CREATE TABLE Membership (
+    Membership_id SERIAL PRIMARY KEY,
+    Tier_level VARCHAR (10) NOT NULL UNIQUE,
+    Discounts INT NOT NULL UNIQUE,
+    Advantages VARCHAR (50)
+);
+
+CREATE INDEX discount ON Membership (Discounts);
+CREATE INDEX Advantages ON Membership (Advantages);
+
+CREATE TABLE Vehicle (
+    Vehicle_id SERIAL PRIMARY KEY,
+    Vehicle_brand VARCHAR(30) NOT NULL,
+    Vehicle_name VARCHAR(50) NOT NULL,
+    VIN VARCHAR(20) NOT NULL UNIQUE,
+    MOT_date DATE NOT NULL,
+    Service_history VARCHAR (500) NOT NULL
+);
+
+CREATE INDEX History ON Vehicle (Service_history);
+CREATE INDEX Brand ON Vehicle (Vehicle_brand);
+
+CREATE TABLE Part (
+    Part_id SERIAL PRIMARY KEY,
+    Part_name VARCHAR(100) NOT NULL,
+    Part_brand VARCHAR(50) NOT NULL,
+    Stock INT NOT NULL,
+    Cost_per_part DECIMAL (10,2)
+);
+
+CREATE INDEX Stock ON Part (Stock);
+CREATE INDEX Part_cost ON Part (Cost_per_part);
+
+
+CREATE TABLE Service (
+    Service_id SERIAL PRIMARY KEY,
+    Service_type VARCHAR (50) NOT NULL,
+    Service_package VARCHAR (50) NOT NULL,
+    Package_description VARCHAR(250) NOT NULL,
+    Start_date DATE NOT NULL,
+    End_date DATE CONSTRAINT check_dates CHECK (End_date > Start_date),
+    Labour_cost DECIMAL (10,2) NOT NULL
+);
+
+CREATE INDEX Service_type ON Service (Service_type);
+CREATE INDEX Start_date ON Service (Start_date);
+CREATE INDEX Service_Cost ON Service (Labour_cost);
+
+
+CREATE TABLE Communication (
+    Communication_id SERIAL PRIMARY KEY,
+    Type_of_message VARCHAR(15) NOT NULL
+);
+
+CREATE TABLE Role (
+    Role_id SERIAL PRIMARY KEY,
+    Role_title VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Shift (
+    Shift_id SERIAL PRIMARY KEY,
+    Start_time TIME NOT NULL,
+    End_time TIME NOT NULL CONSTRAINT check_time CHECK (End_time > Start_time)
+);
+
+CREATE INDEX start_shift ON Shift (Start_time);
+CREATE INDEX end_shift ON Shift (End_time);
+
+CREATE TABLE Staff ( 
+    Staff_id SERIAL PRIMARY KEY, 
+    Branch_id INT NOT NULL, 
+    Shift_id INT NOT NULL, 
+    Staff_forename VARCHAR (30) NOT NULL,
+    Staff_surname VARCHAR (30) NOT NULL,
+    Home_address VARCHAR (100) NOT NULL,
+    Staff_mobile VARCHAR (20) NOT NULL,
+    Staff_email VARCHAR (150) NOT NULL,
+    Skillset VARCHAR (250) NOT NULL,
+    Certifications VARCHAR (150),
+    FOREIGN KEY (Branch_id) REFERENCES Branch(Branch_id),
+    FOREIGN KEY (Shift_id) REFERENCES Shift(Shift_id)
+);
+
+CREATE INDEX staff_name ON Staff (Staff_surname, Staff_forename);
+CREATE INDEX staff_mobile ON Staff (Staff_mobile);
+CREATE INDEX staff_email ON Staff (Staff_email);
+
+CREATE TABLE Service_Task (
+    Task_id SERIAL PRIMARY KEY,
+    Staff_id INT NOT NULL,
+    Service_id INT NOT NULL,
+    Tasks_status VARCHAR(100) NOT NULL,
+    Time_taken INT NOT NULL,
+    Parts_used VARCHAR (100) NOT NULL,
+    FOREIGN KEY (Staff_id) REFERENCES Staff (Staff_id),
+    FOREIGN KEY (Service_id) REFERENCES Service (Service_id)
+);
+
+CREATE INDEX Service_status ON Service_Task (Tasks_status);
+CREATE INDEX parts_used ON Service_Task (Parts_used);
+
+CREATE TABLE Workshop(
+    Workshop_id SERIAL PRIMARY KEY,
+    Availability BOOLEAN NOT NULL,
+    Service_bay VARCHAR(15) NOT NULL
+);
+
+CREATE TABLE safety_inspection (
+    Inspection_id SERIAL PRIMARY KEY,
+    Workshop_id INT NOT NULL,
+    Vehicle_id INT NOT NULL,
+    Inspection_date DATE NOT NULL,
+    MOT_results VARCHAR(50) NOT NULL,
+    Workshop_inspections VARCHAR(500) NOT NULL,
+    FOREIGN KEY (Workshop_id) REFERENCES Workshop(Workshop_id),
+    FOREIGN KEY (Vehicle_id) REFERENCES Vehicle(Vehicle_id)
+);
+
+CREATE TABLE Customer (
+    Customer_id SERIAL PRIMARY KEY,
+    Membership_id INT NOT NULL,
+    Vehicle_id INT NOT NULL,
+    Payment_id INT NOT NULL,
+    Customer_forename VARCHAR (30) NOT NULL,
+    Customer_surname VARCHAR (30) NOT NULL,
+    Customer_email VARCHAR (150) NOT NULL,
+    Customer_email_two VARCHAR (150),
+    Customer_mobile VARCHAR (20) NOT NULL,
+    Customer_mobile_two VARCHAR (20),
+    FOREIGN KEY (Membership_id) REFERENCES Membership (Membership_id),
+    FOREIGN KEY (Vehicle_id) REFERENCES Vehicle (Vehicle_id),
+    FOREIGN KEY (Payment_id) REFERENCES Payment (Payment_id)
+);
+
+CREATE INDEX Cust_name ON Customer (Customer_surname, Customer_forename);
+CREATE INDEX Cust_email ON Customer (Customer_email);
+CREATE INDEX Cust_mobile ON Customer (Customer_mobile);
+
+CREATE TABLE Booking ( 
+    Booking_id SERIAL PRIMARY KEY, 
+    Communication_id INT NOT NULL,
+    Branch_id INT NOT NULL,
+    Workshop_id INT NOT NULL,
+    Customer_id INT NOT NULL,
+    Booking_date DATE NOT NULL, 
+    Booking_time TIME NOT NULL, 
+    Service_type VARCHAR (30),
+    Booking_status BOOLEAN NOT NULL,
+    Booking_method VARCHAR (30) NOT NULL,
+    FOREIGN KEY (Communication_id) REFERENCES Communication (Communication_id),
+    FOREIGN KEY (Branch_id) REFERENCES Branch (Branch_id),
+    FOREIGN KEY (Workshop_id) REFERENCES Workshop (Workshop_id),
+    FOREIGN KEY (Customer_id) REFERENCES Customer (Customer_id)
+);
+
+CREATE INDEX Booking_detail ON Booking (Booking_date, Booking_time);
+CREATE INDEX Booking_status ON Booking (Booking_status);
+
+CREATE TABLE Customer_Feedback (
+    Feedback_id SERIAL PRIMARY KEY,
+    Customer_id INT NOT NULL,
+    Ratings SMALLINT NOT NULL,
+    Comments VARCHAR(500) NOT NULL,
+    Resolution_tracking BOOLEAN NOT NULL,
+    date_of_submission DATE NOT NULL,
+    FOREIGN KEY (Customer_id) REFERENCES Customer(Customer_id)
+);
+
+CREATE INDEX rating ON Customer_Feedback (Ratings);
+CREATE INDEX comments ON Customer_Feedback (Comments);
+
+CREATE TABLE Compliance_Record (
+    Record_id SERIAL PRIMARY KEY,
+    Task_id INT NOT NULL,
+    Results VARCHAR (100) NOT NULL,
+    FOREIGN KEY (Task_id) REFERENCES Service_Task (Task_id)
+);
+
+CREATE INDEX Compliance_result ON Compliance_Record(Results);
+
+CREATE TABLE Staff_role ( 
+    Staff_id INT NOT NULL,
+    Role_id INT NOT NULL,
+    emergency_role_id INT,
+    FOREIGN KEY (Staff_id) REFERENCES Staff (Staff_id),
+    FOREIGN KEY (Role_id) REFERENCES Role (Role_id),
+    FOREIGN KEY (emergency_role_id) REFERENCES Role (Role_id),
+    PRIMARY KEY(Staff_id, Role_id)
+);
+
+CREATE TABLE Service_part ( 
+    Task_id INT NOT NULL,
+    Part_id INT NOT NULL,
+    Amount_used INT NOT NULL,
+    FOREIGN KEY (Task_id) REFERENCES Service_Task (Task_id),
+    FOREIGN KEY (Part_id) REFERENCES Part (Part_id),
+    PRIMARY KEY (Task_id, Part_id)
+);
+
+INSERT INTO Branch (branch_location, Postcode, Facilities, Capacity)
+VALUES
+('Coventry',   'CV1 2WT',  'Toilets, Customer waiting room, Workshop bays, On-site parts storage', 18),
+('Birmingham', 'B12 0BB',  'Toilets, Coffee machine, Wi-Fi, Vehicle wash bay', 14),
+('Leicester',  'LE3 5QG',  'Toilets, Vending machine, Service reception, Diagnostic bays', 16),
+('Northampton','NN4 7JD',  'Toilets, Disabled toilet, Waiting area,Technician office', 12),
+('Oxford',     'OX2 9DY',  'Toilets, Workshop bays, Technician changing room', 20),
+('Bedford',    'MK40 1AT', 'Toilets, Parts storage, Paint workshop', 15),
+('Luton',      'LU1 4AB',  'Toilets, Vehicle exhaust extraction', 19),
+('St Neots',   'PE19 2EY', 'Toilets, Wi-Fi, Inspection bay', 13),
+('Hitchin',    'SG4 9YT',  'Toilets, Waiting room, Staff canteen', 17),
+('Aylesbury',  'HP21 8AA', 'Toilets, Vehicle handover bay, Parts receiving area', 11);
+
+INSERT INTO Payment (Payment_date, Payment_type, Amount_due, Instalment_status, Instalment_note, Refund) 
+VALUES
+('2025-11-05', 'Card', 320.00, FALSE, 'Paid in full; Accident repair', NULL),
+('2025-11-01', 'Cash', 65.50, FALSE, 'Paid in full; MOT and diagnostics', NULL),
+('2025-10-28', 'Bank transfer', 410.25, TRUE, 'First of two instalments for collision repairs', 5.00),
+('2025-10-15', 'Card', 150.00, FALSE, 'Annual membership renewal, Silver tier', NULL),
+('2025-10-12', 'Card', 89.95, FALSE, 'Paid in full; Service package', 10.00),
+('2025-10-08', 'Cash', 60.00, FALSE, 'Paid in full; Tire replacement', NULL),   
+('2025-10-01', 'Bank transfer', 900.00,  TRUE,  'Third of five monthly instalments for major overhaul', 20.00),
+('2025-09-29', 'Card', 45.75,   FALSE, 'Paid in full; Battery replacement', NULL),
+('2025-09-27', 'Online', 45.00,   FALSE, 'Paid in full; Oil change', 12.25),
+('2025-09-19', 'Card', 120.00,  TRUE,  'Second of three instalments; custom diagnostics', NULL);
+
+INSERT INTO Membership (Tier_level, Discounts, Advantages)
+VALUES
+('Basic', 20, NULL),
+('Advanced', 30, 'courtesy car access'),
+('VIP', 40, 'courtesy car access and priority booking');
+
+
+INSERT INTO Vehicle (Vehicle_brand, Vehicle_name, VIN, MOT_date, Service_history) 
+VALUES
+('Volkswagen', 'Golf', 'WVWZZZ1JZXW000001', '2025-06-18', 'Full service 2024, MOT 2025; brake pads replaced; oil/filter changed'),
+('Land Rover', 'Range Rover', 'SALWR2EF3HA000002', '2026-02-11', 'Annual service 2025, MOT 2026; replaced battery and wipers'),
+('Mazda', 'CX-5', 'JMZKE2DY8F0123456', '2025-12-05', 'MOT passed 2025; new tires and oil change; cam belt checked'),
+('Ford', 'Transit', 'WF0AXXWPMAU000003', '2025-09-22', 'Major service 2024, MOT 2025; coolant flush; brake lines inspected'),
+('Audi', 'A3', 'WAUZZZ8V99A987654', '2025-03-15', 'Service 2025, MOT 2025; diagnostic scan for electronics'),
+('Kia', 'Sorento', 'KNADC812255000004', '2026-01-20', 'MOT 2026; air filter and spark plugs replaced; interim service'),
+('Honda', 'Civic', 'SHHFK2760AU000005', '2025-05-10', 'Service 2025 & MOT; replaced exhaust, front tires'),
+('Honda', 'Accord', '1HGCM82633A000006', '2025-11-02', 'Full service history available; all services up to date; MOT 2025'),
+('Renault', 'Clio', 'VF1KZ1ED448000007', '2025-08-30', 'Service 2025, MOT booked; clutch replaced 2024'),
+('Toyota', 'Prius', 'JTDKB20U083000008', '2026-04-22', 'Hybrid system check 2025-2026, MOT 2026; battery stress test');
+
+INSERT INTO Part (Part_name, Part_brand, Stock, Cost_per_part) 
+VALUES
+('Oil Filter', 'Bosch', 100, 15.75),
+('Brake Pads', 'Volkswagen', 50, 25.00),
+('Spark Plug', 'NGK', 200, 5.50),
+('Air Filter', 'Toyota', 75, 12.30),
+('Wiper Blades', 'Ford', 150, 8.80),
+('Headlight', 'Osram', 20, 55.90),
+('Cabin Filter', 'Bosch', 300, 3.50),
+('Timing Belt', 'Continental', 60, 18.00),
+('Fuel Pump', 'Denso', 90, 10.25),
+('Alternator', 'Valeo', 40, 45.00);
+
+INSERT INTO Service (Service_type, Service_package, Package_description, Start_date, End_date, Labour_cost)
+VALUES
+('Oil Change', 'Basic', 'Engine oil replacement and oil filter check', '2025-01-01', '2025-01-02', 49.99),
+('Tire Rotation', 'Standard', 'Rotating tires, inspecting tread, and checking air pressure', '2025-02-05', '2025-02-10', 29.99),
+('Brake Inspection', 'Premium', 'Detailed brake check, pad measurement, and brake fluid top-up', '2025-03-05', '2025-03-15', 59.99),
+('Battery Replacement', 'Standard', 'Battery removal, installation, and charging system test', '2025-04-05', NULL, 89.99),
+('Engine Diagnostics', 'Comprehensive', 'Advanced diagnostic scan, fault report, and solution proposal', '2025-05-05', '2025-05-12', 120.00),
+('Transmission Service', 'Premium', 'Transmission inspection, fluid replacement, and test drive', '2025-06-12', '2025-06-18', 150.00),
+('Air Conditioning Repair', 'Standard', 'AC leak test, refrigerant recharge, and performance check', '2025-07-12', '2025-07-22', 99.95),
+('Wheel Alignment', 'Basic', 'Alignment check and adjustment for optimal steering', '2025-08-30', NULL, 69.50),
+('Scheduled Maintenance', 'Full', 'Multi-point vehicle check, consumables replacement, full inspection', '2025-09-02', '2025-09-12', 200.00),
+('MOT Testing', 'Standard', 'Legal safety and emissions test for compliance', '2025-10-05', '2025-10-15', 45.00);
+
+INSERT INTO Communication (Type_of_message) VALUES
+('Email'),
+('SMS'),
+('Phone Call'),
+('WhatsApp'),
+('In-person'),
+('text messge'),
+('phone call'),
+('Postal Mail'),
+('Live Chat'),
+('Social Media');
+
+
+INSERT INTO Role (Role_title) VALUES
+('Technician'),
+('Branch Manager'),
+('Service Advisor'),
+('Receptionist'),
+('Supervisor'),
+('Quality Inspector'),
+('Customer Service Rep'),
+('Warehouse Staff'),
+('cleaner'),
+('Trainer');
+
+
+INSERT INTO Shift (Start_time, End_time) VALUES
+('08:00:00', '16:00:00'),
+('09:00:00', '17:00:00'),
+('10:00:00', '18:00:00'),
+('12:00:00', '20:00:00'),
+('14:00:00', '22:00:00'),
+('06:00:00', '14:00:00'),
+('15:00:00', '23:00:00'),
+('06:00:00', '22:00:00'),
+('07:00:00', '15:00:00'),
+('13:00:00', '21:00:00');
+
+INSERT INTO Staff (Branch_id, Shift_id, Staff_forename, Staff_surname, Home_address, Staff_mobile, Staff_email, Skillset, Certifications)
+VALUES
+(1, 1, 'Alice', 'Morris', '12 Elm St, Coventry', '07700 900001', 'alice.morris@example.com', 'Technician, Diagnostic expert', 'City & Guilds Advanced Technician'),
+(2, 2, 'Brian', 'Cole', '34 Oak Rd, Birmingham', '07700 900002', 'brian.cole@example.com', 'Service Advisor, Customer Relations', 'NVQ Level 3 Service Advisor'),
+(3, 3, 'Cara', 'Evans', '56 Pine Ln, Leicester', '07700 900003', 'cara.evans@example.com', 'Technician, Brake and Suspension Specialist', 'IOSH Safety Certified'),
+(4, 4, 'David', 'Park', '78 Maple Ave, Northampton', '07700 900004', 'david.park@example.com', 'Receptionist, Booking Coordinator', NULL),
+(5, 5, 'Emma', 'Ward', '90 Birch Dr, Oxford', '07700 900005', 'emma.ward@example.com', 'Technician, MOT Tester', 'MOT Tester Certification'),
+(6, 6, 'Frank', 'Hill', '22 Cedar St, Milton Keynes', '07700 900006', 'frank.hill@example.com', 'Supervisor, Quality Inspector', 'NVQ Level 4 Supervisor'),
+(7, 7, 'Grace', 'Knight', '45 Willow Blvd, Luton', '07700 900007', 'grace.knight@example.com', 'Technician, Engine Specialist', 'Automotive Engineer Diploma'),
+(8, 8, 'Harry', 'Baker', '67 Ash Ct, Peterborough', '07700 900008', 'harry.baker@example.com', 'Warehouse Staff, Parts Management', NULL),
+(9, 9, 'Ivy', 'Lawson', '89 Spruce Rd, Stevenage', '07700 900009', 'ivy.lawson@example.com', 'Service Advisor, Customer Service Representative', 'Customer Service Excellence'),
+(10, 10, 'Jack', 'Turner', '11 Elmwood St, Hemel Hempstead', '07700 900010', 'jack.turner@example.com', 'Trainer, Technician Skills Development', 'Certified Trainer Program');
+
+INSERT INTO Service_Task (Staff_id, Service_id, Tasks_status, Time_taken, Parts_used) 
+VALUES
+(1, 1, 'Completed', 60, 'Oil filter, Engine oil'),
+(2, 2, 'Pending', 45, 'Tyres'),
+(3, 3, 'In Progress', 90, 'Brake pads, Brake fluid'),
+(4, 4, 'Completed', 120, 'Battery'),
+(5, 5, 'Completed', 150, 'Diagnostic tools, Software update'),
+(6, 6, 'Pending', 110, 'Transmission fluid, Gasket'),
+(7, 7, 'Completed', 130, 'Air conditioning refrigerant, Air filter'),
+(8, 8, 'In Progress', 100, 'Alignment tools'),
+(9, 9, 'Completed', 180, 'Oil, Filters, Spark plugs'),
+(10, 10, 'Pending', 50, 'MOT Test fee');
+
+INSERT INTO Workshop (Availability, Service_bay)
+VALUES
+(TRUE,  'Bay A1'),
+(TRUE,  'Bay A2'),
+(FALSE, 'Bay B1'),
+(FALSE, 'Bay B2'),
+(TRUE,  'Bay C1'),
+(TRUE,  'Bay C2'),
+(TRUE,  'Bay D1'),
+(FALSE, 'Bay D2'),
+(TRUE,  'Inspection Bay'),
+(TRUE,  'Diagnostic Bay');
+
+INSERT INTO safety_inspection (Workshop_id, Vehicle_id, Inspection_date, MOT_results, Workshop_inspections)
+VALUES 
+(1, 1, '2025-10-20', 'Pass', 'All equipment calibrated, floor clean, safety signs visible, fire extinguishers checked.'),
+(2, 5, '2025-10-21', 'Fail - Major Defect', 'Lifts show recent maintenance logs, but some tools were left on the floor near the bay.'),
+(3, 6, '2025-10-22', 'Pass - Advisories Issued', 'Work area is well-lit, ventilation system operating, minor oil spill observed and cleaned.'),
+(1, 5, '2025-10-23', 'Pass', 'Emergency stop buttons are accessible and tested, all technicians wearing required PPE.'),
+(4, 4, '2025-10-24', 'Fail - Dangerous Defect', 'Hazardous waste stored correctly, but first-aid kit contents are incomplete and expired.'),
+(2, 3, '2025-10-25', 'Pass', 'Cleanliness standards are excellent, designated walkways clear, no tripping hazards.'),
+(3, 2, '2025-10-26', 'Fail - Major Defect', 'Ramps and pit covers secured, but chemical storage cabinet lock is broken.'),
+(4, 3, '2025-10-27', 'Pass - Advisories Issued', 'Safety data sheets (SDS) are available for all chemicals, some clutter noted in the tool storage area.'),
+(5, 4, '2025-10-28', 'Pass', 'Excellent workshop organization, clearly marked fire exits, daily safety checklists confirmed.'),
+(5, 5, '2025-10-29', 'Fail - Dangerous Defect', 'Extraction system not functioning at full capacity, emergency shower/eyewash station overdue for inspection.');
+
+INSERT INTO Customer (Membership_id, Vehicle_id, Payment_id, Customer_forename, Customer_surname, Customer_email, Customer_email_two, Customer_mobile, Customer_mobile_two)
+VALUES
+(1, 1, 1, 'Deane','Rissom','Deane.Rissom@outlook.com','Drisson345@brightonuni.org.uk', '07123456789', '07900111222'),
+(2, 2, 2, 'Franni','Tithecote','Franni.Tithecote@gmail.com', NULL, '07234567890', NULL),
+(3, 3, 3, 'Carilyn','Wilding','Carilyn.Wilding@hotmail.co.uk','up478345989@myman.ac.uk', '07345678901', '07899887766'),
+(2, 4, 4, 'Boote','Forster','Boote.Forster@gmail.com', NULL, '07456789012', NULL),
+(3, 5, 5, 'Jaclin','Colpus','Jaclin.Colpus@outlook.com','JColpus54@brightonuni.org.uk', '07567890123', '07112233445'),
+(1, 6, 6, 'Daisey','Lapree','Daisey.Lapree@btinternet.co.uk',NULL, '07678901234', NULL),
+(3, 7, 7, 'Micky','Garken','Micky.Garken@btinternet.co.uk','DerekSavage@outlook.com', '07789012345', '07987654321'),
+(1, 8, 8, 'Cayla','Roads','Cayla.Roads@webtoons.org.uk', NULL, '07890123456', NULL),
+(2, 9, 9, 'Crystal','Lenihan','Crystal.Lenihan@hotmail.co.uk','CL34578@gmail.com', '07901234567', '07766554433'),
+(3, 10, 10, 'Magdalene','Toderini','Magdalene.Toderini@webtoons.org.uk', NULL, '07012345678', NULL);
+
+INSERT INTO Booking (Communication_id, Branch_id, Workshop_id, Customer_id, Booking_date, Booking_time, Service_type, Booking_status, Booking_method)
+VALUES
+(1, 1, 1, 1, '2025-11-10', '09:00:00', 'Oil Change', TRUE, 'Online'),
+(2, 2, 2, 2, '2025-11-12', '10:30:00', 'Tire Rotation', TRUE, 'Phone Call'),
+(3, 3, 3, 3, '2025-11-15', '14:00:00', 'Brake Inspection', FALSE, 'Email'),
+(4, 4, 4, 4, '2025-11-20', '08:45:00', 'Battery Replacement', TRUE, 'In-person'),
+(5, 5, 5, 5, '2025-11-22', '11:15:00', 'Engine Diagnostics', TRUE, 'Online'),
+(6, 6, 6, 6, '2025-11-25', '13:00:00', 'Transmission Service', FALSE, 'WhatsApp'),
+(7, 7, 7, 7, '2025-11-28', '15:30:00', 'Air Conditioning Repair', TRUE, 'Phone Call'),
+(8, 8, 8, 8, '2025-11-30', '16:45:00', 'Wheel Alignment', TRUE, 'Email'),
+(9, 9, 9, 9, '2025-12-02', '12:00:00', 'Scheduled Maintenance', TRUE, 'Online'),
+(10, 10, 10, 10, '2025-12-05', '09:30:00', 'MOT Testing', TRUE, 'Postal Mail');
+
+INSERT INTO Customer_Feedback (Customer_id, Ratings, Comments, Resolution_tracking, date_of_submission)
+VALUES 
+(1, 5, 'Excellent MOT service, quick and professional.', TRUE, '2025-01-02'),
+(2, 4, 'Diagnostic assessment was thorough, but took longer than expected.', TRUE, '2025-02-10'),
+(3, 3, 'Accident repair was okay, but communication could be improved.', FALSE, '2025-03-15'),
+(4, 5, 'Loved the priority booking benefit with my membership!', TRUE, '2025-03-17'),
+(5, 2, 'Service advisor seemed rushed, not very helpful.', FALSE, '2025-05-12'),
+(6, 4, 'Courtesy car was a lifesaver during my scheduled service.', TRUE, '2025-06-18'),
+(7, 1, 'Refund process was confusing and slow.', FALSE, '2025-07-22'),
+(8, 5, 'Technician explained everything clearly, great experience.', TRUE, '2025-07-30'),
+(9, 3, 'Workshop bay was clean, but staff seemed understaffed.', FALSE, '2025-09-12'),
+(10, 4, 'Booking online was easy, but follow-up reminders were inconsistent.', TRUE, '2025-10-15');
+
+
+INSERT INTO Compliance_Record (Task_id, Results) 
+VALUES
+(1, 'Passed - No defects found'),
+(2, 'Pending - Awaiting parts delivery'),
+(3, 'Failed - Brake pads below minimum thickness'),
+(4, 'Passed - Battery within warranty'),
+(5, 'Passed - Diagnostic completed without error codes'),
+(6, 'Pending - Transmission fluid analysis required'),
+(7, 'Passed - Air conditioning refrigerant topped up'),
+(8, 'In Progress - Final alignment check underway'),
+(9, 'Passed - Scheduled maintenance completed'),
+(10, 'Pending - MOT test scheduled for next week');
+
+INSERT INTO Staff_role (Staff_id, Role_id, emergency_role_id)
+VALUES
+(1, 1, 5),
+(2, 2, 1),
+(3, 3, NULL),
+(4, 4, NULL),
+(5, 5, 1),
+(6, 6, 8),
+(7, 7, NULL),
+(8, 8, 1),
+(9, 9, NULL),
+(10, 10, 1);
+
+INSERT INTO Service_part (Task_id, Part_id, Amount_used) 
+VALUES
+(1, 1, 3),
+(1, 3, 12),
+(3, 4, 6),
+(4, 6, 3),
+(5, 7, 3),
+(6, 2, 4),
+(7, 5, 5),
+(8, 8, 3),
+(9, 1, 3),
+(10, 9, 2);
+
+CREATE VIEW workshop_availability AS
+SELECT
+w.Service_bay AS "Service bay",
+b.Booking_date AS "Booking date",
+b.Booking_time AS "Booking time",
+b.Service_type AS "Service type",
+CONCAT(s.staff_forename,' ',s.Staff_surname) AS "Staff member"
+FROM 
+Booking b
+JOIN workshop w ON b.workshop_id = w.workshop_id
+JOIN branch br ON b.branch_id = br.branch_id
+JOIN staff s ON b.branch_id = s.branch_id
+WHERE availability = TRUE;
+
+CREATE VIEW service_details AS
+SELECT 
+p.Cost_per_part AS "Cost per part",
+s.Service_type AS "service type",
+s.Service_package AS "service packege",
+s.Labour_cost AS "Labour cost",
+st.Parts_used AS "Parts used",
+sp.Amount_used AS "Amount used"
+FROM
+Service_part sp
+JOIN Service_Task st ON sp.Task_id = st.Task_id
+JOIN Part p ON sp.Part_id = p.Part_id
+JOIN Service s ON st.Service_id = s.Service_id;
+
+CREATE VIEW Results AS
+SELECT
+    si.MOT_results,
+    si.Workshop_inspections,
+    v.Vehicle_name,
+    v.MOT_date,
+    v.Service_history,
+    CONCAT(c.Customer_forename,' ',c.Customer_surname) AS "Customer Name",
+    cf.comments,
+    cf.Ratings,
+    CONCAT(s.Staff_forename,' ',s.Staff_surname) AS "Staff Name"
+FROM safety_inspection si
+JOIN Vehicle v ON si.Vehicle_id = v.Vehicle_id
+JOIN Customer c ON v.Vehicle_id = c.Vehicle_id
+JOIN booking b ON c.Customer_id = b.Customer_id
+JOIN branch br ON b.Branch_id = br.Branch_id
+JOIN Staff s ON br.Branch_id = s.Branch_id
+JOIN Customer_feedback cf ON c.Customer_id = cf.Customer_id
+JOIN Service_Task st ON si.Workshop_id = st.Task_id
+WHERE si.MOT_results = 'Pass' AND cf.Ratings >= 3;
+
+CREATE VIEW part_inventory AS
+SELECT 
+    CONCAT(c.Customer_forename,' ',c.Customer_surname) AS "Customer Name",
+    s.Service_package,
+    COALESCE(STRING_AGG(p.Part_name, ', '), 'No parts recorded') AS "Parts_Used"
+FROM Customer c
+JOIN Booking b ON c.Customer_id = b.Customer_id
+JOIN Service s ON b.Service_type = s.Service_type
+JOIN Service_Task st ON s.Service_id = st.Service_id
+LEFT JOIN Service_part sp ON st.Task_id = sp.Task_id
+LEFT JOIN Part p ON sp.Part_id = p.Part_id
+GROUP BY c.Customer_id, c.Customer_forename, c.Customer_surname, s.Service_package
+ORDER BY c.Customer_surname;
+
+CREATE VIEW booking_details AS
+SELECT 
+bo.Booking_date, 
+bo.Booking_time, 
+cu.Customer_email, 
+cu.Customer_mobile, 
+p.Refund, 
+s.Staff_email, 
+cf.Ratings, 
+cf.Comments
+FROM Customer cu
+JOIN Booking bo ON cu.Customer_id = bo.Customer_id
+JOIN Payment p ON cu.Payment_id = p.Payment_id
+JOIN Branch br ON bo.Branch_id = br.Branch_id
+JOIN Staff s ON br.branch_id = s.branch_id
+JOIN Customer_feedback cf ON cu.Customer_id = cf.Customer_id;
+
+SELECT 
+    p.Part_name,
+    p.Part_brand,
+    p.Stock,
+    COALESCE(SUM(sp.Amount_used), 0) AS "Total Used Last Month",
+    (p.Stock - COALESCE(SUM(sp.Amount_used), 0)) AS "Stock Left",
+    CASE 
+        WHEN (p.Stock - COALESCE(SUM(sp.Amount_used), 0)) < 20 THEN 'LOW STOCK'
+        ELSE 'OK'
+    END AS "Stock Status"
+FROM Part p
+LEFT JOIN Service_part sp ON p.Part_id = sp.Part_id
+LEFT JOIN Service_Task st ON sp.Task_id = st.Task_id
+LEFT JOIN Service s ON st.Service_id = s.Service_id 
+    AND s.Start_date >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY p.Part_id, p.Part_name, p.Part_brand, p.Stock
+ORDER BY "Stock Status" ASC;
+
+SELECT 
+c.Customer_forename AS "firstname",
+c.Customer_surname AS "surname",
+v.Vehicle_name AS "car name",
+m.Discounts AS "discounts",
+m.Advantages AS "advantege"
+FROM 
+Customer c
+JOIN Vehicle v ON c.Vehicle_id = v.Vehicle_id
+JOIN Membership m ON c.Membership_id = m.Membership_id
+WHERE Advantages IS NOT NULL;
+
+
+SELECT
+CONCAT(c.Customer_forename, ' ', c.Customer_surname) AS "Customer Name",
+p.Payment_date AS "Payment Date",
+p.refund AS "Refund Amount",
+cf.Ratings AS "Customer Rating",
+cf.Comments AS "feedback",
+w.workshop_id AS "Workshop ID",
+b.branch_location AS "Branch"
+FROM
+Customer c
+JOIN Payment p ON c.Payment_id = p.Payment_id
+JOIN Customer_Feedback cf ON c.Customer_id = cf.Customer_id
+JOIN Booking bk ON c.Customer_id = bk.Customer_id
+JOIN Workshop w ON bk.Workshop_id = w.Workshop_id
+JOIN Branch b ON bk.Branch_id = b.Branch_id
+WHERE p.Refund IS NOT NULL;
+
+SELECT
+    CONCAT(s.Staff_forename, ' ', s.Staff_surname) AS "Staff Name",
+    s.Staff_email AS "Staff_Email",
+    cf.Ratings AS "Feedback_Rating",
+    cf.Comments AS "Feedback_Comments",
+    b.Service_type AS "Service_Type",
+    b.Booking_date AS "Booking_Date",
+    b.Booking_time AS "Booking_Time",
+    w.Service_bay AS "Service_Bay"
+FROM Staff s
+Join branch br ON s.Branch_id = br.Branch_id
+JOIN Booking b ON br.Branch_id = b.Branch_id
+JOIN customer c ON b.Customer_id = c.Customer_id
+JOIN Customer_Feedback cf ON c.Customer_id = cf.Customer_id
+JOIN Workshop w ON b.Workshop_id = w.Workshop_id
+WHERE cf.Resolution_tracking = FALSE;
+
+SELECT
+    CONCAT(s.staff_forename, ' ', s.staff_surname) AS "Staff Name",
+    s.staff_mobile AS "Mobile_Number",
+    r.Role_title AS "Role",
+    sh.Start_time AS "Shift_Start",
+    sh.End_time AS "Shift_End",
+    se.Start_date AS "Service_Start",
+    se.End_date AS "Service_End"
+FROM Staff s
+JOIN Staff_role sr ON s.Staff_id = sr.Staff_id
+JOIN Role r ON sr.Role_id = r.Role_id
+JOIN Shift sh ON s.Shift_id = sh.Shift_id
+JOIN Service_Task st ON s.Staff_id = st.Staff_id
+JOIN Service se ON st.Service_id = se.Service_id;
+
+CREATE ROLE Branch_manager WITH LOGIN PASSWORD 'Branch_mann';
+CREATE ROLE Technician WITH LOGIN PASSWORD 'Techhy_boy';
+CREATE ROLE Receptionist WITH LOGIN PASSWORD 'Recy_girl';
+CREATE ROLE Customer_service_rep WITH LOGIN PASSWORD 'Pa55W0rd';
+CREATE ROLE Trainer WITH LOGIN PASSWORD 'Snickers_bar';
+CREATE ROLE Cleaner WITH LOGIN PASSWORD 'Squeaky_dave';
+CREATE ROLE Warehouse_staff WITH LOGIN PASSWORD 'warrenTim';
+CREATE ROLE Service_advisor WITH LOGIN PASSWORD 'Adserver12';
+CREATE ROLE Supervisor WITH LOGIN PASSWORD 'Superman6';
+CREATE ROLE Quality_inspector WITH LOGIN PASSWORD 'NeedSleep1';
+CREATE ROLE Customer LOGIN;
+
+GRANT SELECT ON Branch TO Branch_manager;
+GRANT SELECT ON Branch TO Service_advisor;
+GRANT SELECT ON Branch TO Supervisor;
+
+GRANT SELECT ON Payment TO Branch_manager;
+GRANT INSERT ON Payment TO Branch_manager;
+GRANT UPDATE ON Payment TO Branch_manager;
+GRANT DELETE ON Payment TO Branch_manager;
+
+GRANT SELECT ON Branch TO Service_advisor;
+GRANT SELECT ON Branch TO Supervisor;
+
+GRANT SELECT ON Membership TO Branch_manager;
+GRANT SELECT ON Membership TO Service_advisor;
+GRANT SELECT ON Membership TO Receptionist;
+GRANT SELECT ON Membership TO Customer;
+
+GRANT SELECT ON Vehicle TO Technician;
+GRANT INSERT ON Vehicle TO Technician;
+GRANT UPDATE ON Vehicle TO Technician;
+GRANT DELETE ON Vehicle TO Technician;
+
+GRANT SELECT ON Vehicle TO Supervisor;
+GRANT INSERT ON Vehicle TO Supervisor;
+GRANT UPDATE ON Vehicle TO Supervisor;
+GRANT DELETE ON Vehicle TO Supervisor;
+
+GRANT SELECT ON Vehicle TO Branch_manager;
+GRANT SELECT ON Vehicle TO Service_advisor;
+
+GRANT SELECT ON Part TO Technician;
+GRANT INSERT ON Part TO Technician;
+GRANT UPDATE ON Part TO Technician;
+GRANT DELETE ON Part TO Technician;
+
+GRANT SELECT ON Part TO Warehouse_staff;
+GRANT INSERT ON Part TO Warehouse_staff;
+GRANT UPDATE ON Part TO Warehouse_staff;
+GRANT DELETE ON Part TO Warehouse_staff;
+
+GRANT SELECT ON Part TO Branch_manager;
+GRANT SELECT ON Part TO Service_advisor;
+
+GRANT SELECT ON Service TO Branch_manager;
+GRANT INSERT ON Service TO Branch_manager;
+GRANT UPDATE ON Service TO Branch_manager;
+GRANT DELETE ON Service TO Branch_manager;
+
+GRANT SELECT ON Service TO Supervisor;
+GRANT INSERT ON Service TO Supervisor;
+GRANT UPDATE ON Service TO Supervisor;
+GRANT DELETE ON Service TO Supervisor;
+
+GRANT SELECT ON Service TO Technician;
+GRANT SELECT ON Service TO Service_advisor;
+GRANT SELECT ON Service TO Warehouse_staff;
+
+GRANT SELECT ON Communication TO Branch_manager;
+GRANT SELECT ON Communication TO Service_advisor;
+GRANT SELECT ON Communication TO Receptionist;
+GRANT SELECT ON Communication TO Customer;
+
+GRANT SELECT ON Role TO Branch_manager;
+GRANT SELECT ON Role TO Service_advisor;
+
+GRANT SELECT ON Shift TO Supervisor;
+GRANT INSERT ON Shift TO Supervisor;
+GRANT UPDATE ON Shift TO Supervisor;
+GRANT DELETE ON Shift TO Supervisor;
+
+GRANT SELECT ON Shift TO Branch_manager;
+GRANT SELECT ON Shift TO Service_advisor;
+
+GRANT SELECT ON Staff TO Branch_manager;
+GRANT INSERT ON Staff TO Branch_manager;
+GRANT UPDATE ON Staff TO Branch_manager;
+GRANT DELETE ON Staff TO Branch_manager;
+
+GRANT SELECT ON Staff TO Service_advisor;
+GRANT SELECT ON Staff TO Supervisor;
+
+GRANT SELECT ON Service_Task TO Supervisor;
+GRANT INSERT ON Service_Task TO Supervisor;
+GRANT UPDATE ON Service_Task TO Supervisor;
+GRANT DELETE ON Service_Task TO Supervisor;
+
+GRANT SELECT ON Service_Task TO Branch_manager;
+GRANT SELECT ON Service_Task TO Service_advisor;
+GRANT SELECT ON Service_Task TO Warehouse_staff;
+
+GRANT SELECT ON Workshop TO Supervisor;
+GRANT INSERT ON Workshop TO Supervisor;
+GRANT UPDATE ON Workshop TO Supervisor;
+GRANT DELETE ON Workshop TO Supervisor;
+
+GRANT SELECT ON Workshop TO Branch_manager;
+GRANT SELECT ON Workshop TO Technician;
+GRANT SELECT ON Workshop TO Service_advisor;
+GRANT SELECT ON Workshop TO Warehouse_staff;
+
+GRANT SELECT ON Customer TO Receptionist;
+GRANT INSERT ON Customer TO Receptionist;
+GRANT UPDATE ON Customer TO Receptionist;
+GRANT DELETE ON Customer TO Receptionist;
+
+GRANT SELECT ON Customer TO Branch_manager;
+GRANT SELECT ON Customer TO Service_advisor;
+GRANT SELECT ON Customer TO Customer;
+
+GRANT SELECT ON Booking TO Receptionist;
+GRANT INSERT ON Booking TO Receptionist;
+GRANT UPDATE ON Booking TO Receptionist;
+GRANT DELETE ON Booking TO Receptionist;
+
+GRANT SELECT ON Booking TO Branch_manager;
+GRANT INSERT ON Booking TO Branch_manager;
+GRANT UPDATE ON Booking TO Branch_manager;
+GRANT DELETE ON Booking TO Branch_manager;
+
+GRANT SELECT ON Booking TO Service_advisor;
+GRANT SELECT ON Booking TO Customer;
+
+GRANT SELECT ON Customer_feedback TO Branch_manager;
+GRANT SELECT ON Customer_feedback TO Service_advisor;
+GRANT SELECT ON Customer_feedback TO Supervisor;
+GRANT SELECT ON Customer_feedback TO Customer;
+
+GRANT SELECT ON Compliance_Record TO Supervisor;
+GRANT INSERT ON Compliance_Record TO Supervisor;
+GRANT UPDATE ON Compliance_Record TO Supervisor;
+GRANT DELETE ON Compliance_Record TO Supervisor;
+
+GRANT SELECT ON Compliance_Record TO Branch_manager;
+GRANT SELECT ON Compliance_Record TO Technician;
+GRANT SELECT ON Compliance_Record TO Service_advisor;
+
+GRANT SELECT ON workshop_availability TO Supervisor;
+GRANT SELECT ON workshop_availability TO Technician;
+
+GRANT SELECT ON service_details TO Supervisor;
+GRANT SELECT ON service_details TO Technician;
+GRANT SELECT ON service_details TO Quality_inspector;
+
+GRANT SELECT ON part_inventory TO Supervisor;
+GRANT SELECT ON part_inventory TO Technician;
+GRANT SELECT ON part_inventory TO Quality_inspector;
+
+GRANT SELECT ON booking_details TO Receptionist;
+GRANT SELECT ON booking_details TO Customer;
+
+GRANT SELECT ON Results TO Technician;
+GRANT SELECT ON Results TO Branch_manager;
+GRANT SELECT ON Results TO Supervisor; 
